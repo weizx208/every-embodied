@@ -189,7 +189,7 @@
     },
     "05-具身场景的深度和强化学习/03AGILE人形机器人Loco-Manipulation复现/README.md": {
       "target": "en/05-deep-and-reinforcement-learning/03-agile-humanoid-robot-loco-manipulation-reproduction/README.md",
-      "sourceHash": "911feea6529cd72c7b34a77f260308b2fa3bd206adef90d0b01ea93d657531df",
+      "sourceHash": "5b25be3cc0bc6245d0808e56352f3c53c22f46fe953c89ec1e13e5f935b8b039",
       "model": "tencent/Hy-MT2-1.8B-GGUF:Q4_K_M",
       "modelRevision": "dc5f44fcf1fa496ee7ad725982c0c8c553a4de00259b53af84c4b89fb0c06699"
     },
@@ -1822,6 +1822,18 @@
     "05-具身场景的深度和强化学习/07-UniCross统一跨技能灵巧操作导读/README.md": {
       "target": "en/05-deep-and-reinforcement-learning/07-unicross-unified-cross-skill-agile-manipulation-guide/README.md",
       "sourceHash": "ae45a97f58747c84084678123ea87eaf16147a43c60518134fb891a88281c993",
+      "model": "tencent/Hy-MT2-1.8B-GGUF:Q4_K_M",
+      "modelRevision": "dc5f44fcf1fa496ee7ad725982c0c8c553a4de00259b53af84c4b89fb0c06699"
+    },
+    "05-具身场景的深度和强化学习/03AGILE人形机器人Loco-Manipulation复现/经验分享.md": {
+      "target": "en/05-deep-and-reinforcement-learning/03-agile-humanoid-robot-loco-manipulation-reproduction/experience-sharing.md",
+      "sourceHash": "ebb040b08e9a40858cd402d8cc540053909407859c9d097a170e3888b6621112",
+      "model": "tencent/Hy-MT2-1.8B-GGUF:Q4_K_M",
+      "modelRevision": "dc5f44fcf1fa496ee7ad725982c0c8c553a4de00259b53af84c4b89fb0c06699"
+    },
+    "05-具身场景的深度和强化学习/05-OpenDuckMini与Microduck双足强化学习/assets/local_reports/microduck_ballkick_6000_model_card.md": {
+      "target": "en/05-deep-and-reinforcement-learning/05-open-duck-mini-and-microduck-biped-rl/assets/local_reports/microduck_ballkick_6000_model_card.md",
+      "sourceHash": "4524385bdd24f28e26e2598d582dbd07c783f1fcc901906617a70229b4a6b02a",
       "model": "tencent/Hy-MT2-1.8B-GGUF:Q4_K_M",
       "modelRevision": "dc5f44fcf1fa496ee7ad725982c0c8c553a4de00259b53af84c4b89fb0c06699"
     }
