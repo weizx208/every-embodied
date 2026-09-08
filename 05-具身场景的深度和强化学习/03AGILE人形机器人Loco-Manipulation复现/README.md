@@ -1,4 +1,6 @@
-# AGILE 人形机器人 Loco-Manipulation：从论文任务到 Isaac Lab 5.1 复现
+# AGILE 人形机器人 Loco-Manipulation［移动操作］：从论文任务到 Isaac Sim 5.1 复现
+
+配套阅读：[复现经验：视频诊断、评测边界与资产管理](经验分享.md)。
 
 这一章带大家学习 NVIDIA Isaac 团队开源的 **AGILE: A Generic Isaac-Lab based Engine for humanoid loco-manipulation learning**。AGILE 对应论文为 **AGILE: A Comprehensive Workflow for Humanoid Loco-Manipulation Learning**，官方仓库为 [nvidia-isaac/WBC-AGILE](https://github.com/nvidia-isaac/WBC-AGILE)，论文地址为 [arXiv:2603.20147](https://arxiv.org/abs/2603.20147)。
 
@@ -7,7 +9,7 @@
 学完这一章后，大家可以完成三件事：
 
 - 理解 AGILE 论文真正验证了哪些人形机器人任务，以及这些任务为什么比“完整室内移动操作”简单；
-- 在 Isaac Sim 5.1 / Isaac Lab 2.3.2 环境中复刻 AGILE 仓库，跑通 T1 velocity、G1 velocity-height 和 G1 pick-place debug 场景的短视频验证；
+- 在 Isaac Sim 5.1 / Isaac Lab 2.3.2 环境中复刻 AGILE 仓库，完成 T1 速度跟踪、G1 速度与高度控制、G1 抓取放置场景的短视频验证；
 - 顺着源码看清楚一个 AGILE 任务如何由 scene、command、action、observation、reward、termination、event 和 agent config 组成。
 
 ## 一、AGILE 到底在解决什么问题
@@ -385,7 +387,7 @@ ISAACLAB_PATH="$ISAACLAB_PATH" \
   <source src="assets/local_videos/g1_velocity_height_checkpoint_smoke.mp4" type="video/mp4">
 </video>
 
-**视频 8 本地复刻：Unitree G1 velocity-height recurrent checkpoint smoke test。** 这段视频验证完整 checkpoint 可以在本地 Isaac Lab 5.1 栈中加载和渲染。短视频只说明推理链路通了，不代表重新训练完成。
+**视频 8 本地复刻：Unitree G1 速度与高度控制循环策略的最小运行验证。** 这段视频验证完整 checkpoint［检查点］可以在 Isaac Sim 5.1 / Isaac Lab 2.3.2 中加载和渲染。短视频说明推理链路可用，不代表重新训练完成。
 
 <p align="center"><sub>来源：本章本地复刻生成，命令见上方。</sub></p>
 
