@@ -4,6 +4,8 @@
 
 ## 入口文档
 
+- [PhysX-Omni 彩色资产生成实践](14-PhysX-Omni彩色资产生成实践/README.md) - 单图部件生成、Blackwell 环境兼容、权重校验、Isaac Sim 渲染及机器人碰撞验收边界。
+
 - [仿真平台选型与目录导览](01仿真配置文档.md) - 对比 MuJoCo、Isaac Sim、ManiSkill、Habitat、GenieSim、Genesis、AirSim 等平台的定位和适用任务。
 - [ManiSkill 环境仿真配置](02Maniskill环境仿真配置.md) - ManiSkill 仿真环境搭建教程。
 - [Isaac Sim、Isaac Lab 与 GR00T 部署导览](01Isaac部署与GR00T实践/00Isaac部署导览.md) - 统一说明本地 Windows、Linux 工作站、云服务器、Docker、micromamba/venv、Isaac Lab 和 GR00T 路线。
