@@ -4,17 +4,17 @@ Source SHA-256: ac3b0cc56f611852d952f73c560557f7c01228aff743ab37df7fc5fe5eab7460
 Model: tencent/Hy-MT2-1.8B-GGUF:Q4_K_M
 Review machine-translated technical claims before relying on them.
 -->
-# 04-Locate Anything: Convert natural language into visual positioning boxes usable by robots
+# 04-Locate Anything: Convert natural language into visual positioning boxes for robots
 
-Locate Anything is a visual language localization model released by NVIDIA. It addresses a straightforward problem: given a picture and a natural language sentence, the model can output a 2D box or point of the target. For embodied AI, it is neither a VLA policy nor a grasping planner, but rather a language condition-aware front-end that is well-suited to be connected before VLA, SAM, depth estimation, and grasping modules.
+Locate Anything is a visual language localization model released by NVIDIA. It addresses a straightforward problem: given a image and a natural language sentence, the model outputs a 2D box or point of the target. For embodied AI, it is neither a VLA policy nor a grasping planner, but rather a language condition-aware front-end that is well-suited to be connected before VLA, SAM, depth estimation, and grasping modules.
 
 After completing this chapter, you can finish three tasks:
 
 - Download and run `nvidia/LocateAnything-3B` locally.
 - Compare the output and speed of Locate Anything and YOLO26n using the same diagram.
-- Understand why it uses Parallel Box Decoding, and where it should be placed in the robot pipeline.
+- Understand why it implements Parallel Box Decoding, and where it should be placed in the robot pipeline.
 
-> This chapter places the environment, model weights, and runtime output in the main directory `$DATA_ROOT`. The tutorial repository only retains the Markdown format and lightweight result charts. Model weights, HF cache, pip cache, and runtime logs should not be submitted to the repository.
+> This chapter places the environment, model weights, and running outputs in the main directory `$DATA_ROOT`. The tutorial repository only retains the Markdown format and lightweight result charts. Model weights, HF cache, pip cache, and running logs should not be submitted to the repository.
 
 ## 1. Where is it suitable to be placed in the embodied system?
 
@@ -28,12 +28,12 @@ The coordinate is a normalized integer ranging from 0 to 1000. It is then mapped
 
 | Task | Role of Locate Anything | Subsequent Modules |
 | :--- | :--- | :--- |
-| Language-conditioned Object Localization | Convert “person wearing a cream-colored coat”, “drawer handle”, and “top-right button” into 2D boxes | crop, SAM, depth estimation |
+| Language-conditioned Object Localization | Convert “people in cream-colored coats”, “drawer handles”, and “top-right buttons” into 2D boxes | crop, SAM, depth estimation |
 | Automatic Data Annotation | Generate candidate boxes for real robot images in batches | manual review, training set cleaning |
-| VLA/VLM Perception Enhancement | Provide task-related regions for the policy model | VLA policy, memory writer |
-| GUI/OCR/Document Locating | Locate button, text, table, and title regions | multi-modal agent, RPA |
+| VLA/VLM Perception Enhancement | Provide task-related regions to the policy model | VLA policy, memory writer |
+| GUI/OCR/Document Locating | Locate buttons, text, tables, and title regions | multi-modal agent, RPA |
 
-It does not directly output 6D pose, grasping pose, contact status, path planning, or closed loop control signals. If you want to use it for robotic arm grasping, a more reasonable workflow would be:
+It does not directly output the 6D pose, grasping pose, contact state, path planning, or closed loop control signals. If you want to use it for robotic arm grasping, a more reasonable workflow would be:
 
 ```mermaid
 flowchart LR
@@ -53,24 +53,24 @@ This chapter runs successfully in the following environment:
 | Item | Local verification value |
 | :--- | :--- |
 | GPU | NVIDIA RTX PRO 6000 Blackwell Workstation Edition 96GB |
-| Driver / CUDA | NVIDIA Driver 580.159.03, `nvidia-smi` indicates CUDA 13.0 |
+| Driver / CUDA | NVIDIA Driver 580.159.03, `nvidia-smi` shows CUDA 13.0 |
 | PyTorch | `torch==2.11.0+cu128` |
 | Locate Anything | NVlabs/Eagle `Embodied` directory, `nvidia/LocateAnything-3B` |
 | Transformers | `transformers==4.57.1` |
 | YOLO reference | `ultralytics==8.4.80`, `yolo26n.pt` |
 
-During this machine's smoke test, `flash_attn` or `MagiAttention` was not installed. The log shows that the model automatically falls back to PyTorch SDPA:
+During this machine's smoke test, `flash_attn` or `MagiAttention` was not installed, and it can be seen in the logs that the model automatically falls back to PyTorch SDPA:
 
 ```text
 flash_attn is not available for MoonViT inference; falling back to sdpa.
 magi_attention not available, falling back to sdpa.
 ```
 
-Therefore, the speed in this chapter is only a record of "the basic environment being functional", not an official peak benchmark. The official README reports that Locate Anything-3B achieves 12.7 BPS in Hybrid Mode on a single H100; the speed measured in this chapter is obtained under SDPA fallback and with other tasks running on the GPU.
+Therefore, the speed in this chapter is only a record of the "basic environment being functional," not an official peak benchmark. The official README reports that Locate Anything-3B achieves 12.7 BPS in Hybrid Mode on a single H100; the speed measured in this chapter is based on SDPA fallback, and when there are other tasks running on the GPU.
 
 ## III. Environment and Model Preparation
 
-Define several directories first. You can replace `$DATA_ROOT` with your own dashboard path; do not include model weights in the tutorial repository.
+Define several directories first. You can replace `$DATA_ROOT` with your own dashboard path; do not add model weights to the tutorial repository.
 
 ```bash
 export DATA_ROOT=/path/to/large_disk/locate-anything
@@ -130,7 +130,7 @@ if torch.cuda.is_available():
 PY
 ```
 
-Output of this machine:
+This machine output:
 
 ```text
 torch 2.11.0+cu128
@@ -158,14 +158,14 @@ mkdir -p "$DATA_ROOT/models"
   --local-dir "$MODEL_DIR"
 ```
 
-After this machine downloads, the model directory is approximately 7.3GB, and the two main weight files are:
+After this machine downloads, the model directory is approximately 7.3GB in size, and the two main weight files are:
 
 ```text
 model-00001-of-00002.safetensors  4.7G
 model-00002-of-00002.safetensors  2.6G
 ```
 
-If the download is interrupted, simply run the same `hf download` command again to resume the download at the breakpoint.
+If the download is interrupted, simply running the same `hf download` command again will allow the download to continue from where it left off.
 
 ## IV. Locate Anything smoke test
 
@@ -178,7 +178,7 @@ curl -L https://ultralytics.com/images/bus.jpg -o "$IMAGE_PATH"
 
 Figure 1 is the input image.
 
-![ Figure 1 Input image: Buses and pedestrians in a street view ](../../04-具身场景的计算机视觉、3D重建/assets/locate-anything/bus_input.jpg)
+![ Figure 1 Input image: Buses and pedestrians in the street view ](../../04-具身场景的计算机视觉、3D重建/assets/locate-anything/bus_input.jpg)
 
 Run Locate Anything:
 
@@ -261,9 +261,9 @@ The results of the three queries by this machine are as follows:
 
 | Prompt | Output Summary | Local Time |
 | :--- | :--- | :--- |
-| `bus` | 1 bus frame | ~1.00s |
-| `person` | 4 pedestrians frames | ~0.63s |
-| `the man in the cream coat standing in front of the bus` | A person referred to by natural language | ~0.63s |
+| `bus` | 1 bus frame |约 1.00s |
+| `person` | 4 pedestrians frames |约 0.63s |
+| `the man in the cream coat standing in front of the bus` | A person referred to by natural language |约 0.63s |
 
 Bus positioning results:
 
@@ -277,9 +277,9 @@ Natural language refers to the expression of positioning results:
 
 ![ Figure 4 Locate Anything Locates a specific person based on "the man in the cream coat" ](../../04-具身场景的计算机视觉、3D重建/assets/locate-anything/front_person_locateanything_result.jpg)
 
-Please pay special attention to Figure 4: Here, it is not just about detecting `person` types, but rather identifying "people wearing cream-colored coats standing in front of buses" among multiple pedestrians. This is exactly why Locate Anything is more valuable than ordinary fixed category detectors.
+Please pay special attention to Figure 4: This is not simply detecting `person` types, but identifying "people wearing cream-colored coats standing in front of a bus" among multiple pedestrians. This is precisely why Locate Anything is more valuable than ordinary fixed category detectors.
 
-## 5. Compare with YOLO26n using the same images
+## 5. Compare with YOLO26n in the same diagram
 
 YOLO26 is a real-time visual model family released by Ultralytics. The official documentation states that it supports tasks such as detection, segmentation, pose, classification, and oriented detection. The detection model covers 80 pre-trained categories on COCO, and it emphasizes low-latency deployment without NMS.
 
@@ -354,7 +354,7 @@ print("boxes", items)
 PY
 ```
 
-This machine's YOLO26n outputs 5 boxes: 1 `bus` and 4 `person`. The internal processing time after preheating is:
+This machine YOLO26n outputs 5 boxes: 1 `bus` and 4 `person`. The internal processing time of the preheated model is:
 
 ```text
 preprocess: 2.38 ms
@@ -368,17 +368,17 @@ postprocess: 0.80 ms
 
 | Dimension | YOLO26n | Locate Anything-3B |
 | :--- | :--- | :--- |
-| Core Function | Real-time fixed category detector | Visual language grounding model |
-| Input | Image, default output: COCO categories | Image + natural language prompt |
-| Output | Categories, confidence scores, boxes | `<ref>...</ref><box>...</box>` or points |
+| Core Function | Real-time fixed class detector | Visual language grounding model |
+| Input | Image, default output: COCO classes | Image + natural language prompt |
+| Output | Classes, confidence scores, boxes | `<ref>...</ref><box>...</box>` or points |
 | Local inference speed | Approximately 4.12 ms for model inference | Approximately 0.63 s to 1.00 s for generative positioning |
-| Parameter scale | YOLO26n official table: 2.4M parameters; YOLO26x: 55.7M | Model card indicates 3B parameters |
-| Advantageous tasks | Fixed categories, real-time video streams, edge deployment | Referring, GUI, OCR, layout, open vocabulary positioning |
+| Parameter scale | YOLO26n official table: 2.4M parameters; YOLO26x: 55.7M | Model card states 3B parameters |
+| Advantageous tasks | Fixed classes, real-time video streams, edge deployment | Referring, GUI, OCR, layout, open vocabulary positioning |
 | Robot applications | Quick detection of common categories such as people, vehicles, cups, bottles, etc. | Finding target regions based on task-specific language, e.g., "the red cup handle on the left" |
 
-If the task is simply “is there anyone, a car, or a cup in the camera”, YOLO26n is clearly faster and uses less memory, making it more suitable for real-time deployment. If the task is “find someone wearing a cream-colored coat standing in front of a bus”, or “find the download button in the upper right corner of a web page”, “the first paragraph under the document summary title”, or “a transparent cup near the gripper on the desktop”, Locate Anything is more appropriate for the task.
+If the task is simply “is there anyone, a car, or a cup in the camera”, YOLO26n is clearly faster and uses less memory, making it more suitable for real-time deployment. If the task is “find someone wearing a cream-colored coat standing in front of a bus”, or “find the download button in the upper right corner of a web page”, “the first paragraph under the document summary title”, or “a transparent cup on the desktop near the gripper”, Locate Anything is more appropriate for the task.
 
-It should be noted that Ultralytics also released YOLOE-26, which supports open vocabulary detection and segmentation of text prompts and visual prompts. YOLOE-26 is closer to a "real-time open vocabulary detector", but Locate Anything has a positioning range that is more aligned with VLM grounding, covering structured scenarios such as GUI, OCR, layout, referring, and pointing. When working on academic paper-related tasks, do not simply treat them as interchangeable; a more accurate description is:
+It should be noted that Ultralytics has also released YOLOE-26, which supports open vocabulary detection and segmentation using text prompts and visual prompts. YOLOE-26 is closer to a "real-time open vocabulary detector," but Locate Anything has a more VLM grounding-based positioning range, covering structured scenarios such as GUI, OCR, layout, referring, and pointing. When working on academic paper-related tasks, do not simply treat them as interchangeable; a more accurate description is:
 
 ```text
 YOLO26 / YOLOE-26：实时检测与分割模型族，重部署速度和检测任务。
@@ -398,14 +398,14 @@ If using NTP, that is, Next Token Prediction, the model must first generate `x1`
 1. The coordinate generation process is complex and slow.
 2. The four coordinates of a box form a geometric whole. When generated token by token, the structure may become inconsistent.
 
-The core concept of Locate Anything is Parallel Box Decoding, abbreviated as PBD. It treats a box or point as a fixed-length atomic unit, allowing the complete coordinates to be predicted in a parallel step. The official README describes it as box-aligned multi-token prediction: Fast Mode uses MTP, Slow Mode uses NTP, and Hybrid Mode defaults to MTP. If there are format errors or spatial ambiguities, it locally reverts to NTP.
+The core idea of Locate Anything is Parallel Box Decoding, abbreviated as PBD. It treats a box or point as a fixed-length atomic unit, allowing the complete coordinates to be predicted in a parallel step. The official README describes it as multi-token prediction with box alignment: Fast Mode uses MTP, Slow Mode uses NTP, and Hybrid Mode defaults to MTP. If there are format errors or spatial ambiguities, it locally reverts to NTP.
 
 You can understand it like this:
 
 | Decoding Method | Approach | Suitable Scenario |
 | :--- | :--- | :--- |
-| NTP / Slow | Generate one token at a time | Prioritize stability, offline annotation |
-| MTP / Fast | Predict multiple tokens simultaneously | Prioritize speed |
+| NTP / Slow | Generate one token at a time | Prioritizing stability, offline annotation |
+| MTP / Fast | Predict multiple tokens simultaneously | Prioritizing speed |
 | PBD / Hybrid | Parallel prediction using boxes as geometric blocks, with fallback when needed | Default inference |
 
 When this machine runs `person` multiple frames on `bus.jpg`, the Hybrid Mode log shows:
@@ -430,29 +430,29 @@ bps=1.0199
 switch_to_ar=0
 ```
 
-These numbers only indicate that the local smoke test is completed; they should not be directly compared with the official H100 benchmark.
+These numbers only indicate that the local smoke test has been completed successfully; they should not be directly compared with the official H100 benchmark.
 
 ## VII. Common Questions
 
 **1. Can consumer or workstation cards like the RTX 4090 and RTX PRO 6000 run?**
 
-It can run. The compatible architectures listed for NVIDIA model cards include Ampere, Hopper, Blackwell, and Lovelace. The Lovelace example includes the RTX 4090. The local RTX PRO 6000 Blackwell with 96GB of memory can run BF16 with a single image without memory issues. A 4090 with 24GB of memory is more suitable for batch=1, low concurrency, offline annotation, or demos; for 4K high resolution, dense targets, and server-based batch processing, a larger amount of memory is recommended.
+It can run. The compatible architectures listed for NVIDIA model cards include Ampere, Hopper, Blackwell, and Lovelace. The Lovelace example includes the RTX 4090. The local RTX PRO 6000 Blackwell with 96GB of memory can handle BF16 single-image processing without memory issues. A 4090 with 24GB of memory is more suitable for batch=1, low concurrency, offline annotation, or demos; however, 4K high resolution, dense targets, and server-based batch processing still benefit from more memory.
 
 **2. Why was MagiAttention not installed in this chapter?**
 
-The goal of this chapter is to ensure the basic reasoning works properly first. The official README states that MagiAttention is designed for long context training and reasoning with Hopper / Blackwell. If you want to use long contexts of 16K to 32K or pursue batch throughput, install it separately and verify it later. In the basic tutorial, keep SDPA fallback for easier troubleshooting.
+The goal of this chapter is to first run through the basic reasoning process. The official README states that MagiAttention is designed for long context training and inference with Hopper / Blackwell. If you want to use long contexts of 16K to 32K or aim for higher batch throughput, install it separately and verify it later. In the basic tutorial, keep SDPA fallback for easier troubleshooting.
 
 **3. Locate Anything returning to `<box>None</box>` is the model broken?**
 
-Not necessarily. It may be that the prompt is unclear, the image is a puzzle/table causing ambiguity, or the target is not in the image. In this chapter, when trying to find `car` on the official `teaser.jpg`, None was returned. However, finding `ship` and `crop tool icon` in the same image can yield reasonable boxes. During replication, verify first with a clean image and a clear target, and then test complex scenarios.
+Not necessarily. It may be due to unclear prompts, images being puzzles/forms that cause ambiguity, or the target not being in the image. In this chapter, when trying to find `car` on the official `teaser.jpg`, None was returned. However, finding `ship` and `crop tool icon` in the same image can yield reasonable boxes. During replication, verify first with a clean image and a clear target, and then test complex scenarios.
 
 **4. Can it replace YOLO26?**
 
-Do not use this way. If the task is real-time fixed-category detection, YOLO26 is more appropriate. If the task involves natural language, GUI/OCR/document layout, complex gesture expressions, or robot task semantics, Locate Anything is more valuable. A common combination is: YOLO handles high-speed security detection of common categories, while Locate Anything focuses on target localization related to task language.
+Do not use this way. If the task is real-time fixed-category detection, YOLO26 is more suitable. If the task involves natural language, GUI/OCR/document layout, complex gesture expressions, or robot task semantics, Locate Anything is more valuable. A common combination is: YOLO handles high-speed security detection of common categories, and Locate Anything focuses on target localization related to task language.
 
-**5. How to grasp the robot in the next step?**
+**5. How to grasp the robot next step?**
 
-First, use the 2D box of Locate Anything as a prompt for SAM/SAM2 to obtain the mask. Then, deeply fuse the mask region with RGB-D to form 3D point clouds. Subsequently, GraspNet, 6D pose, traditional grasping detection, or VLA policy can be applied. By breaking it down this way, each layer has clear input and output, making troubleshooting easier.
+First, use the 2D box of Locate Anything as a prompt for SAM/SAM2 to obtain the mask. Then, deeply fuse the mask region with RGB-D to generate 3D point clouds. Subsequently, GraspNet, 6D pose, traditional grasping detection, or VLA policy can be applied. By breaking it down this way, each layer has clear input and output, making troubleshooting easier.
 
 ## VIII. Reference Links
 
